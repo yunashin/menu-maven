@@ -6,6 +6,9 @@ React/TypeScript/Vite app that suggests restaurant recommendations. Stores resta
 ## Running locally
 `npm run dev`
 
+## Deploying when building
+`npm run deploy`
+
 ## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
