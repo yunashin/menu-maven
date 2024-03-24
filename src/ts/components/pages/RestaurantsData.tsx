@@ -14,10 +14,11 @@ export const RestaurantsData = ({ fetchedData, hasFetched, setEditing }: { fetch
 
   const onDeleteClick = async (id: string) => {
     try {
-      window.confirm("Are you sure you want to delete this Todo?")
-      const documentRef = doc(db, "todo", id);
-      await deleteDoc(documentRef);
-      window.location.reload();
+      if (window.confirm("Are you sure you want to delete this restaurant?")) {
+        const documentRef = doc(db, "restaurants", id);
+        await deleteDoc(documentRef);
+        window.location.reload();
+      }
     } catch (err) {
       console.log(err);
     }

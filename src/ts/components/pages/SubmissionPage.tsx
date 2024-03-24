@@ -151,7 +151,7 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
 
   return <>
     <FormInput
-      label={<>Restaurant Name</>}
+      label={<>Restaurant Name*</>}
       onChange={(e: { target: { value: string } }) => setRestaurantName(e.target.value)}
       value={restaurantName} />
     <FormInput
@@ -165,14 +165,14 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
       selectedValues={daysClosed}
     />
     <MultiSelect
-      label="City"
+      label="City*"
       options={cityOptions}
       onChange={onCitiesChange}
       selectedValues={cities}
       selectionLimit={1}
     />
     <MultiSelect
-      label="Cuisines"
+      label="Cuisines*"
       options={cuisineOptions}
       onChange={onCuisineChange}
       selectedValues={cuisines}
@@ -200,7 +200,7 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
     <button
       style={{ marginTop: '20px' }}
       disabled={
-        !hasFetched || (editingRestaurant ? !hasEditingStateChanged : false) || restaurantName === '' || !totalCuisines.length}
+        !hasFetched || (editingRestaurant ? !hasEditingStateChanged : false) || restaurantName === '' || !totalCuisines.length || !cities.length}
       onClick={onClick}>
       {editingRestaurant ? 'Edit restaurant' : 'Add restaurant'}
     </button>
