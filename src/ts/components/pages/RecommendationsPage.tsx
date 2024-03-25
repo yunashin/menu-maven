@@ -17,7 +17,8 @@ export const RecommendationsPage = ({ fetchedData }: { fetchedData: Restaurant[]
   const results = fetchedData.filter((restaurant: Restaurant) =>
     restaurant.cuisines.some((cuisine: string) => {
       if (!selectedCuisines.length || !selectedLocations.length) {
-        return getOptionNames(selectedCuisines).includes(cuisine) || getOptionNames(selectedLocations).includes(restaurant.city);
+        return (getOptionNames(selectedCuisines).includes(cuisine) || getOptionNames(selectedLocations).includes(restaurant.city)) &&
+          (hasSpecials ? Object.values(restaurant.specials).some((special: string) => special !== '') : true);
       }
       return getOptionNames(selectedCuisines).includes(cuisine) &&
         getOptionNames(selectedLocations).includes(restaurant.city) &&
