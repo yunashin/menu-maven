@@ -21,7 +21,7 @@ export const MultiSelect = ({ label, onChange, options, selectedValues, selectio
               width: '300px'
             },
             optionContainer: {
-              background: '#8e7a7a'
+              background: '#bfa9a9'
             },
             chips: {
               background: 'teal'

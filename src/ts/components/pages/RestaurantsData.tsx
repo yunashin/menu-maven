@@ -35,9 +35,9 @@ export const RestaurantsData = ({ fetchedData, hasFetched, setEditing }: { fetch
         .slice(0, pageSize).map((restaurant: Restaurant, index: number) => {
           return (
             <div key={restaurant.name} style={{ marginTop: '40px' }}>
-              <div style={{ fontSize: '18pt', fontWeight: 'bold' }}>
+              <a className={restaurant.website === "" ? 'disabled' : ''} href={restaurant.website} style={{ fontSize: '18pt', fontWeight: 'bold' }}>
                 {`${restaurant.name} (${restaurant.city})`}
-              </div>
+              </a>
               <div>
                 {formatSlashList(restaurant.cuisines)}
               </div>
