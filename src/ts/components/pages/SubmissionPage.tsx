@@ -7,6 +7,7 @@ import { areListsEqual, areSpecialsEqual, getCuisineOptionsFromData, getLocation
 import { db } from "../../services/firebase.config";
 import { MultiSelect } from "../helperComponents/MultiSelect";
 import { dayOptions } from "../../constants/RecommendationConstants";
+import { Checkbox } from "../helperComponents/Checkbox";
 
 const stateHasChangedFromEditingRestaurant = (editingRestaurant: Restaurant | null, restaurantState: Restaurant) => {
   if (editingRestaurant) {
@@ -56,6 +57,7 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
   const [website, setWebsite] = useState(editingRestaurant ? editingRestaurant.website : '');
   const [additionalCuisines, setAdditionalCuisines] = useState('');
   const [cities, setCities] = useState<MultiselectOption[]>(editingRestaurant ? [{ name: editingRestaurant.city, id: 1 }] : []);
+  const [otherCity, setOtherCity] = useState('');
   const [cuisines, setCuisines] = useState<MultiselectOption[]>(editingRestaurant ? getOptionsFromNames(editingRestaurant.cuisines, cuisineOptions) : []);
   const [daysClosed, setDaysClosed] = useState<MultiselectOption[]>(editingRestaurant ? editingRestaurant.closed.map((day: string) => dayOptions.find((dayOption: MultiselectOption) => dayOption.value === day) || { name: '', id: 1 }) : []);
   const [canBeDelivered, setCanBeDelivered] = useState(editingRestaurant ? editingRestaurant.canBeDelivered : false);
@@ -74,11 +76,12 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
       .map((cuisine: string) => cuisine.trim())
       .filter((cuisine: string) => cuisine !== '')
   ], [additionalCuisines, cuisines]);
-  const restauarantState = useMemo(() => ({
+  const city = cities.length ? cities[0].name : otherCity;
+  const restaurantState = useMemo(() => ({
     name: restaurantName,
     baseRecommendationScore: editingRestaurant ? editingRestaurant.baseRecommendationScore : 1,
     canBeDelivered: canBeDelivered,
-    city: cities.length ? cities[0].name : '',
+    city: cities.length ? cities[0].name : otherCity,
     closed: daysClosed.map((day: MultiselectOption) => day.name),
     cuisines: totalCuisines,
     website,
@@ -86,23 +89,25 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
   }), [canBeDelivered, cities, daysClosed, editingRestaurant, restaurantName, specials, totalCuisines, website]);
 
   const hasEditingStateChanged = useMemo(() => {
-    return stateHasChangedFromEditingRestaurant(editingRestaurant, restauarantState as Restaurant);
-  }, [editingRestaurant, restauarantState]);
+    return stateHasChangedFromEditingRestaurant(editingRestaurant, restaurantState as Restaurant);
+  }, [editingRestaurant, restaurantState]);
 
   const collectionRef = collection(db, 'restaurants');
 
-  const onCitiesChange = (selectedList: MultiselectOption[]) => setCities(selectedList);
+  const onCitiesChange = (selectedList: MultiselectOption[]) => {
+    setCities(selectedList);
+    setOtherCity('');
+  };
   const onCuisineChange = (selectedList: MultiselectOption[]) => setCuisines(selectedList);
   const onDaysClosedChange = (selectedList: MultiselectOption[]) => setDaysClosed(selectedList);
   const onSpecialsChange = (special: string, day: string) => setSpecials({ ...specials, [day]: special });
 
   const onClick = async () => {
-    console.log({ restauarantState });
     if (editingRestaurant) {
       if (editingRestaurant.id && editingRestaurant.id !== '') {
         try {
           const document = doc(db, 'restaurants', editingRestaurant.id)
-          await updateDoc(document, restauarantState);
+          await updateDoc(document, restaurantState);
           window.location.reload();
         } catch (error) {
           setError(`${error}`);
@@ -130,14 +135,7 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
         // }
         if (restaurantName !== '' && cuisines.length && cities.length) {
           await addDoc(collectionRef, {
-            name: restaurantName,
-            baseRecommendationScore: 1,
-            canBeDelivered,
-            city: cities[0].name,
-            closed: daysClosed.map((day: MultiselectOption) => day.value),
-            cuisines: totalCuisines,
-            website,
-            specials,
+            ...restaurantState,
             timestamp: serverTimestamp()
           });
           window.location.reload();
@@ -171,6 +169,11 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
       selectedValues={cities}
       selectionLimit={1}
     />
+    <FormInput
+      label={<><div>City (if not found above)</div>{!!cities.length ? <div>Remove cities from the dropdown above to enter a new city.</div> : null}</>}
+      disabled={!!cities.length}
+      onChange={(e: { target: { value: string } }) => setOtherCity(e.target.value)}
+      value={otherCity} />
     <MultiSelect
       label="Cuisines*"
       options={cuisineOptions}
@@ -191,16 +194,16 @@ export const SubmissionPage = ({ editingRestaurant, fetchedData, hasFetched }:
         value={specials[dayOption.value!] || ''}
       />
     )}
-    <div style={{ marginTop: '20px' }}>
-      <b>Can be delivered</b>
-      <input type="checkbox" onChange={(e: { target: { checked: boolean } }) => setCanBeDelivered(e.target.checked)} checked={canBeDelivered} />
-    </div>
+    <Checkbox
+      label="Can be delivered"
+      checked={canBeDelivered}
+      onChange={(e: { target: { checked: boolean } }) => setCanBeDelivered(e.target.checked)} />
     {!hasFetched ? <div>You can't {editingRestaurant ? 'edit' : 'add'} a restauarant because there was an issue connecting with the database.</div> : null}
     {error ? <div>Error detected: {error}</div> : null}
     <button
       style={{ marginTop: '20px' }}
       disabled={
-        !hasFetched || (editingRestaurant ? !hasEditingStateChanged : false) || restaurantName === '' || !totalCuisines.length || !cities.length}
+        !hasFetched || (editingRestaurant ? !hasEditingStateChanged : false) || restaurantName === '' || !totalCuisines.length || city === ''}
       onClick={onClick}>
       {editingRestaurant ? 'Edit restaurant' : 'Add restaurant'}
     </button>

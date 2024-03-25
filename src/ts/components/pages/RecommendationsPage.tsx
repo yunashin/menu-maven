@@ -4,19 +4,25 @@ import { MultiselectOption, Restaurant } from "../../types/Types";
 import { formatSlashList, getCuisineOptionsFromData, getLocationOptionsFromData, getOptionNames } from "../../utils/optionUtils";
 import { MultiSelect } from "../helperComponents/MultiSelect";
 import { dayOptions } from "../../constants/RecommendationConstants";
+import { Checkbox } from "../helperComponents/Checkbox";
 
 export const RecommendationsPage = ({ fetchedData }: { fetchedData: Restaurant[] }) => {
   const [selectedCuisines, setSelectedCuisines] = useState<MultiselectOption[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<MultiselectOption[]>([]);
+  const [hasSpecials, setHasSpecials] = useState(false);
 
   const onCuisineChange = (selectedList: MultiselectOption[]) => setSelectedCuisines(selectedList);
   const onLocationChange = (selectedList: MultiselectOption[]) => setSelectedLocations(selectedList);
 
   const results = fetchedData.filter((restaurant: Restaurant) =>
-    restaurant.cuisines.some((cuisine: string) =>
-      getOptionNames(selectedCuisines).includes(cuisine)
-    ) &&
-    getOptionNames(selectedLocations).includes(restaurant.city));
+    restaurant.cuisines.some((cuisine: string) => {
+      if (!selectedCuisines.length || !selectedLocations.length) {
+        return getOptionNames(selectedCuisines).includes(cuisine) || getOptionNames(selectedLocations).includes(restaurant.city);
+      }
+      return getOptionNames(selectedCuisines).includes(cuisine) &&
+        getOptionNames(selectedLocations).includes(restaurant.city) &&
+        (hasSpecials ? Object.values(restaurant.specials).some((special: string) => special !== '') : true);
+    }));
 
   return (
     <>
@@ -30,8 +36,13 @@ export const RecommendationsPage = ({ fetchedData }: { fetchedData: Restaurant[]
         options={getLocationOptionsFromData(fetchedData)}
         onChange={onLocationChange}
         selectedValues={selectedLocations} />
-      {results.length ? <div style={{ marginTop: '60px' }}>
-        <h4>Results</h4>
+      <Checkbox
+        label="Has specials"
+        checked={hasSpecials}
+        onChange={(e: { target: { checked: boolean } }) => setHasSpecials(e.target.checked)} />
+      {selectedCuisines.length || selectedLocations.length || hasSpecials ? <h4 style={{ marginTop: '60px' }}>Results</h4> : null}
+      {!results.length && (selectedCuisines.length || selectedLocations.length || hasSpecials) ? <div>No results found</div> : null}
+      {results.length ? <div>
         {results.map((result: Restaurant) =>
           <div key={result.name}>
             <p>
